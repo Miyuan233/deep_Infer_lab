@@ -32,3 +32,10 @@ $HOME/anaconda3/bin/conda run -n infer-h200 python scripts/verify_model_snapshot
 ```
 
 只有 16 个文件的大小、SHA-256 均符合固定清单，才能称为“权重下载并校验完成”。这仍不能说明模型在 H200 上可运行或有任何性能结论。后续加载前必须获得具体 GPU 编号授权并重新检查占用。
+
+## 2026-10-24 实际结果
+
+- ModelScope 下载器以退出码 0 结束，报告固定提交的 16/16 个文件已下载。
+- 2026-10-24 16:44（Asia/Shanghai）运行独立校验器，结果 `passed`：16/16 个文件的大小和 SHA-256 全部符合清单，验证字节数为 31,418,838,137。
+- 原始校验结果保留在服务器本地 `models/DeepSeek-V2-Lite-Chat/verification.json`；模型、校验结果与下载器目录均被 Git 忽略。下载后 `/home` 约剩 4.7 TiB 空间，`infer-h200` 的 `pip check` 未发现依赖破损。
+- 没有加载模型、启动推理服务或使用 GPU。此前 GPU 3 的 Smoke Test 授权不适用于下一次模型实验。

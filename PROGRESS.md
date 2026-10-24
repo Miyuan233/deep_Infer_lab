@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚未开始模型推理或性能基准。
+M1 单卡基线准备——模型权重已固定并校验；尚未加载模型、启动服务或进行性能基准。
 
 ## 已完成
 
@@ -29,34 +29,35 @@ M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚�
 - 编写显式指定 GPU 编号的 PyTorch/Triton Smoke Test、CPU 侧安全检查测试及中文执行说明；5 项 CPU 侧单元测试通过。
 - 用户明确授权本次 Smoke Test 使用 GPU 3。执行前复查为 0 MiB 已用、无计算进程；1024 个 FP32 元素的 PyTorch/Triton 加法结果完全一致，状态 `passed`，耗时 3.944 秒。结束后复查 GPU 3 为 0 MiB、无计算进程。原始 JSON 保存在服务器本地 `results/m0/20261024T075614Z-gpu-smoke-gpu3/result.json`，对应代码提交 `5458798`。
 - 只读检查发现用户目录暂无 Hugging Face/ModelScope 模型缓存，也未发现 Environment Module；形成 `docs/m1-baseline-plan.md`。最初考虑 Qwen3-8B 做测量链联调，后因项目目标进一步比较了 DeepSeek 系模型。
-- 已核对 DeepInfer 官方 README 与部署问答：当前公开版列出 NVIDIA SM100 与 DeepSeek-V4.1-Flash，不能视作 H200（SM90）/Qwen3-8B 可直接运行；制定 `docs/deepinfer-reading-plan.md`，从 M1 并行研读，待 M2 证据决定是否迁移组件。
-- 确认 Qwen3-8B 官方文件页当前修订为 `b968826d9c46dd6066d109eabc6255188de91218`、仓库约 16.4 GB；`/home` 约 3.0 TiB 可用，但服务器对 Hugging Face 的 IPv4 HTTPS 连接超时，尚未下载权重。
+- 已核对 DeepInfer 官方 README 与部署问答：当前公开版列出 NVIDIA SM100 与 DeepSeek-V4.1-Flash，不能视作 H200（SM90）/DeepSeek-V2-Lite-Chat 可直接运行；制定 `docs/deepinfer-reading-plan.md`，从 M1 并行研读，待 M2 证据决定是否迁移组件。
+- 确认 Qwen3-8B 官方文件页当前修订为 `b968826d9c46dd6066d109eabc6255188de91218`、仓库约 16.4 GB；服务器对 Hugging Face 的 IPv4 HTTPS 连接超时。该备选模型尚未下载。
 - 新增纯 CPU 的 TTFT/TPOT/ITL 指标公式与 7 项单元测试，以及仅供审阅的 M1 工作负载目标配置；尚未连接推理服务或产出基准数据。
-- 用户询问是否存在更适合 DeepInfer 目标的模型，因此暂停 Qwen3-8B 下载决策。只读比较 DeepSeek-V2-Lite-Chat、Qwen3-8B 与 Qwen3-30B-A3B-Instruct-2507；暂推荐 DeepSeek-V2-Lite-Chat，详见 `docs/m1-model-comparison.md`。未下载任何权重。
+- 用户询问是否存在更适合 DeepInfer 目标的模型，因此暂停 Qwen3-8B 下载决策。只读比较 DeepSeek-V2-Lite-Chat、Qwen3-8B 与 Qwen3-30B-A3B-Instruct-2507；用户最终选择 DeepSeek-V2-Lite-Chat，详见 `docs/m1-model-comparison.md`。
+- 用户单独批准约 31.4 GB 模型下载。使用项目独立 `.venv/` 内的 `modelscope-hub==0.4.6` 从 ModelScope 固定提交 `d174ca84ff4d8cd51f8e927bcb1242555e31b2c0` 下载；16 个文件共 31,418,838,137 字节。2026-10-24 16:44（Asia/Shanghai）独立校验全部文件大小与 SHA-256，通过 16/16；原始校验 JSON 保留在服务器本地 `models/DeepSeek-V2-Lite-Chat/verification.json`。下载和校验未使用 GPU。
+- 新增模型清单、独立校验器与 6 项相关 CPU 单元测试；服务器 `infer-h200` 全套 18 项 CPU 单元测试通过。模型、下载器和原始校验文件均被 Git 忽略；`infer-h200` 的 `pip check` 仍显示无依赖破损。
 
 ## 当前重要观察
 
 - `nvidia-smi` 的 CUDA UMD 13.4 不等于已安装系统级 CUDA Toolkit。
 - PyTorch 自带 CUDA 13.2 Runtime。环境外 PATH 中虽无 `nvcc`，但 Wheel 内有 `nvcc` 13.4.92；能否可靠构建自定义扩展，仍需验证混合版本、Header 和链接器布局。
 - Triton 已在获授权的 GPU 3 上完成 H200 JIT Launch 与最小正确性验证；这不代表任何 Kernel 加速或模型推理性能结论。
-- M0 检查未在 `infer-h200` 中发现 `pytest`、`flash-attn` 或 Nsight 命令行工具；尚未安装任何包。
+- M0 检查未在 `infer-h200` 中发现 `pytest`、`flash-attn` 或 Nsight 命令行工具；模型下载器只安装在项目独立 `.venv/`，未更改 `infer-h200` 依赖。
 - GPU 3 的授权仅针对已完成的本次 Smoke Test；后续模型加载、服务和 Benchmark 仍需单独确认资源预算与授权。
 - 目录在初始化前不是 Git 仓库。
 
 ## 阻塞项与待决策
 
 1. 后续 CUDA 初始化、模型加载、Benchmark 或 Profiler Capture 前，用户必须明确授权 GPU 编号；本次 Smoke Test 授权不自动延续。
-2. 必须先估算下载大小和显存余量，再选择基线模型与工作负载。
+2. 首次模型加载前须重新检查获授权 GPU 占用，确定 vLLM 显存预算和安全余量；ModelScope 权重已下载并校验，但本机可运行性尚未验证。
 3. 决定如何暴露并验证环境内的 Wheel 版 `nvcc`，以及如何在不修改系统的情况下获得 Nsight；同时应确认管理员是否提供 Module。
 4. 决定把 `pytest` 等开发依赖安装到 `infer-h200`，还是克隆一个更严格隔离的项目环境。
 
 ## 下一步
 
-1. 只读检查 Environment Module 和用户态 CUDA/Nsight 方案。
-2. 用户从模型候选中确认首个基线模型及下载预算；下载前核对精确权重版本、文件字节数与磁盘余量。
-3. 按 `docs/deepinfer-reading-plan.md` 研读官方架构，并记录与单卡 H200 基线的可迁移点和不可迁移点。
-4. 获批后固定依赖与模型版本，开始实现 M1 Benchmark Harness；先规定正确性、TTFT、TPOT、吞吐量和显存的测量口径。
-5. 模型下载、加载和任何 Benchmark 运行前，重新确认 GPU 编号、资源预算和时间窗口。
+1. 按 `docs/deepinfer-reading-plan.md` 研读官方架构，记录与单卡 H200 基线的可迁移点和不可迁移点。
+2. 在不使用 GPU 的前提下审阅 DeepSeek-V2-Lite-Chat 的 Tokenizer、工作负载配置与 vLLM 启动参数；明确首次加载的显存预算、预期时长和退出条件。
+3. 用户明确授权下一次模型加载的 GPU 编号与时间窗口后，重新检查占用，再做短时功能验证；不复用早前 GPU 3 Smoke Test 授权。
+4. 功能验证通过后，单独计划可复现的 TTFT、TPOT、吞吐量和显存基线，并保存逐请求原始数据。
 
 ## 性能结论
 
