@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-M1 前置验证准备——等待用户授权具体 GPU 编号。
+M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚未开始模型推理或性能基准。
 
 ## 已完成
 
@@ -26,33 +26,32 @@ M1 前置验证准备——等待用户授权具体 GPU 编号。
 - 将项目同步到公开 GitHub 仓库 `Miyuan233/deep_Infer_lab`；H200 与本地 `main` 均跟踪 `origin/main`，首次提交为 `b10e70a`。
 - 将含内部主机身份、进程信息的 M0 快照及历史 `base` 清单排除在公开提交之外，原始文件保留在服务器。
 - 生成轻量级 M0 环境快照：`results/m0/20261024T044101Z-environment/`；其中包含本机身份与进程信息，仅保存在服务器，不提交到公开仓库。
-- 编写显式指定 GPU 编号的 PyTorch/Triton Smoke Test、CPU 侧安全检查测试及中文执行说明；尚未进行 GPU 运行。
+- 编写显式指定 GPU 编号的 PyTorch/Triton Smoke Test、CPU 侧安全检查测试及中文执行说明；5 项 CPU 侧单元测试通过。
+- 用户明确授权本次 Smoke Test 使用 GPU 3。执行前复查为 0 MiB 已用、无计算进程；1024 个 FP32 元素的 PyTorch/Triton 加法结果完全一致，状态 `passed`，耗时 3.944 秒。结束后复查 GPU 3 为 0 MiB、无计算进程。原始 JSON 保存在服务器本地 `results/m0/20261024T075614Z-gpu-smoke-gpu3/result.json`，对应代码提交 `5458798`。
 
 ## 当前重要观察
 
 - `nvidia-smi` 的 CUDA UMD 13.4 不等于已安装系统级 CUDA Toolkit。
 - PyTorch 自带 CUDA 13.2 Runtime。环境外 PATH 中虽无 `nvcc`，但 Wheel 内有 `nvcc` 13.4.92；能否可靠构建自定义扩展，仍需验证混合版本、Header 和链接器布局。
-- Triton 已安装并携带 `ptxas` 12.8.93，但因尚未授权 GPU，未进行 H200 JIT Launch 验证。
+- Triton 已在获授权的 GPU 3 上完成 H200 JIT Launch 与最小正确性验证；这不代表任何 Kernel 加速或模型推理性能结论。
 - M0 检查未在 `infer-h200` 中发现 `pytest`、`flash-attn` 或 Nsight 命令行工具；尚未安装任何包。
-- GPU 3 在检查时无进程，但“空闲”不代表“已授权”。
+- GPU 3 的授权仅针对已完成的本次 Smoke Test；后续模型加载、服务和 Benchmark 仍需单独确认资源预算与授权。
 - 目录在初始化前不是 Git 仓库。
 
 ## 阻塞项与待决策
 
-1. 任何 CUDA 初始化、模型加载、Benchmark 或 Profiler Capture 前，用户必须明确授权 GPU 编号。
+1. 后续 CUDA 初始化、模型加载、Benchmark 或 Profiler Capture 前，用户必须明确授权 GPU 编号；本次 Smoke Test 授权不自动延续。
 2. 必须先估算下载大小和显存余量，再选择基线模型与工作负载。
 3. 决定如何暴露并验证环境内的 Wheel 版 `nvcc`，以及如何在不修改系统的情况下获得 Nsight；同时应确认管理员是否提供 Module。
 4. 决定把 `pytest` 等开发依赖安装到 `infer-h200`，还是克隆一个更严格隔离的项目环境。
 
 ## 下一步
 
-1. 审阅 M0 文档与环境快照。
-2. 用户确认 GPU 编号和可接受的测试时间窗口。
-3. 获授权后执行预计 1～2 分钟的 Smoke Test：CUDA 可用性、设备能力、微小 Tensor 正确性、Triton JIT 与显存释放。
-4. 只读检查 Environment Module 和用户态 CUDA/Nsight 方案。
-5. 提出 2～3 个基线模型/工作负载组合，列出下载大小、预计显存和研究价值。
-6. 获批后固定依赖与模型版本，开始实现 M1 Benchmark Harness。
+1. 只读检查 Environment Module 和用户态 CUDA/Nsight 方案。
+2. 选择基线模型、权重版本和代表性工作负载，先估算下载大小与显存余量。
+3. 获批后固定依赖与模型版本，开始实现 M1 Benchmark Harness；先规定正确性、TTFT、TPOT、吞吐量和显存的测量口径。
+4. 模型下载、加载和任何 Benchmark 运行前，重新确认 GPU 编号、资源预算和时间窗口。
 
 ## 性能结论
 
-无。M0 没有运行模型推理、训练、GPU Benchmark 或 Profiler Capture。
+无。已运行的 Smoke Test 只验证 PyTorch/Triton 小张量正确性；3.944 秒是包含启动与编译等开销的脚本总耗时，不能用作推理或 Kernel 性能指标。JSON 中的 2.0 MiB 是 PyTorch 报告的显存保留峰值，不包含 CUDA 上下文等进程总占用，不能当作 GPU 实际峰值。

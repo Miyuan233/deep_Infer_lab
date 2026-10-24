@@ -29,3 +29,12 @@ $HOME/anaconda3/bin/conda run -n infer-h200 python scripts/gpu_smoke.py --gpu-in
 ```
 
 执行结束后再用 `nvidia-smi` 检查显存是否释放。即使脚本通过，也只能证明最小运行路径可用；模型选择、vLLM 服务、Profiler 和端到端 Benchmark 仍需分别验证。
+
+## 2026-10-24 实际结果
+
+- 用户仅授权本次 Smoke Test 使用 GPU 3；运行前检查为 0 MiB 已用、无计算进程，运行后再次检查也为 0 MiB、无计算进程。
+- PyTorch `2.13.0+cu132`、Triton `3.7.1` 识别 NVIDIA H200 NVL（计算能力 9.0）；1024 个 FP32 元素的结果完全一致。
+- 脚本状态为 `passed`，总耗时 3.944 秒。原始结果位于服务器本地 `results/m0/20261024T075614Z-gpu-smoke-gpu3/result.json`，对应提交 `5458798`。该原始文件包含设备 UUID，因此不推送到公开仓库。
+- PyTorch 报告的峰值 `reserved` 为 2.0 MiB，仅反映其缓存分配器，不是进程占用的整卡显存峰值。此次没有持续监测实际峰值，也没有性能 Benchmark。
+
+此授权已用于上述单次测试，不自动覆盖后续模型加载、推理服务或性能测试。
