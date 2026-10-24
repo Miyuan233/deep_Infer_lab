@@ -29,6 +29,7 @@ M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚�
 - 编写显式指定 GPU 编号的 PyTorch/Triton Smoke Test、CPU 侧安全检查测试及中文执行说明；5 项 CPU 侧单元测试通过。
 - 用户明确授权本次 Smoke Test 使用 GPU 3。执行前复查为 0 MiB 已用、无计算进程；1024 个 FP32 元素的 PyTorch/Triton 加法结果完全一致，状态 `passed`，耗时 3.944 秒。结束后复查 GPU 3 为 0 MiB、无计算进程。原始 JSON 保存在服务器本地 `results/m0/20261024T075614Z-gpu-smoke-gpu3/result.json`，对应代码提交 `5458798`。
 - 只读检查发现用户目录暂无 Hugging Face/ModelScope 模型缓存，也未发现 Environment Module；形成 `docs/m1-baseline-plan.md`，暂推荐先用 Qwen3-8B 验证测量链，再评估更大 dense 或 MoE 模型。
+- 已核对 DeepInfer 官方 README 与部署问答：当前公开版列出 NVIDIA SM100 与 DeepSeek-V4.1-Flash，不能视作 H200（SM90）/Qwen3-8B 可直接运行；制定 `docs/deepinfer-reading-plan.md`，从 M1 并行研读，待 M2 证据决定是否迁移组件。
 
 ## 当前重要观察
 
@@ -50,8 +51,9 @@ M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚�
 
 1. 只读检查 Environment Module 和用户态 CUDA/Nsight 方案。
 2. 用户确认基线模型及下载预算；下载前核对精确权重版本、文件字节数与磁盘余量。
-3. 获批后固定依赖与模型版本，开始实现 M1 Benchmark Harness；先规定正确性、TTFT、TPOT、吞吐量和显存的测量口径。
-4. 模型下载、加载和任何 Benchmark 运行前，重新确认 GPU 编号、资源预算和时间窗口。
+3. 按 `docs/deepinfer-reading-plan.md` 研读官方架构，并记录与单卡 H200 基线的可迁移点和不可迁移点。
+4. 获批后固定依赖与模型版本，开始实现 M1 Benchmark Harness；先规定正确性、TTFT、TPOT、吞吐量和显存的测量口径。
+5. 模型下载、加载和任何 Benchmark 运行前，重新确认 GPU 编号、资源预算和时间窗口。
 
 ## 性能结论
 

@@ -13,6 +13,7 @@
 - 框架基线：现有 Conda 环境 `infer-h200` 中的 PyTorch 与 vLLM。
 - 优化实现：合适时优先 Triton；需要更低层控制或集成时使用 CUDA/C++。
 - 参考项目：DeepInfer、DeepGEMM、vLLM 及相关上游 Kernel；复用前必须检查代码和许可证。
+- DeepInfer 架构阅读从 M1 开始并行进行；当前官方公开版的 NVIDIA 支持目标为 SM100、模型支持为 DeepSeek-V4.1-Flash，与本项目 H200（SM90）和首选 Qwen3-8B 基线不直接匹配。是否迁移单独设计或组件，须在 M2 瓶颈证据出现后决定，详见 `docs/deepinfer-reading-plan.md`。
 
 ## M0 不做的事情
 
@@ -36,6 +37,7 @@
 ### M1——可复现的单卡服务基线
 
 - 选择在授权 H200 上具有安全显存余量的开源模型。
+- 并行阅读 DeepInfer 官方架构，明确公开引擎、完整在线服务与本项目硬件的边界。
 - 固定模型/Tokenizer 版本和服务配置。
 - 构造具有代表性的请求工作负载。
 - 测量 TTFT、TPOT/ITL、延迟分位数、吞吐量和峰值显存。
