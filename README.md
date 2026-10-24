@@ -8,6 +8,7 @@
 - `PROJECT.md`：范围、里程碑和测量方法；
 - `PROGRESS.md`：当前已验证状态与下一步；
 - `docs/environment.md`：M0 环境审计。
+- `docs/git-workflow.md`：Git 同步与公开仓库的数据边界。
 
 指定 Conda 环境为 `infer-h200`。自动化命令优先采用：
 
