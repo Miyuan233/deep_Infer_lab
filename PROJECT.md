@@ -13,7 +13,7 @@
 - 框架基线：现有 Conda 环境 `infer-h200` 中的 PyTorch 与 vLLM。
 - 优化实现：合适时优先 Triton；需要更低层控制或集成时使用 CUDA/C++。
 - 参考项目：DeepInfer、DeepGEMM、vLLM 及相关上游 Kernel；复用前必须检查代码和许可证。
-- DeepInfer 架构阅读从 M1 开始并行进行；当前官方公开版的 NVIDIA 支持目标为 SM100、模型支持为 DeepSeek-V4.1-Flash，与本项目 H200（SM90）和首选 Qwen3-8B 基线不直接匹配。是否迁移单独设计或组件，须在 M2 瓶颈证据出现后决定，详见 `docs/deepinfer-reading-plan.md`。
+- DeepInfer 架构阅读从 M1 开始并行进行；当前官方公开版的 NVIDIA 支持目标为 SM100、模型支持为 DeepSeek-V4.1-Flash，与本项目 H200（SM90）和已选 DeepSeek-V2-Lite-Chat 基线不直接匹配。是否迁移单独设计或组件，须在 M2 瓶颈证据出现后决定，详见 `docs/deepinfer-reading-plan.md`。
 
 ## M0 不做的事情
 
@@ -102,8 +102,8 @@
 
 ## 待决策事项
 
-- 下一次模型加载实验获授权的 GPU 编号；早前 Smoke Test 授权不自动延续。
-- 首个基线模型已选 DeepSeek-V2-Lite-Chat，ModelScope 权重固定到 `d174ca84ff4d8cd51f8e927bcb1242555e31b2c0` 并通过逐文件校验；尚待真实推理链路验证。
+- 后续服务、Benchmark 或 Profiler 实验获授权的 GPU 编号；早前功能验证授权不自动延续。
+- 首个基线模型已选 DeepSeek-V2-Lite-Chat，ModelScope 权重固定到 `d174ca84ff4d8cd51f8e927bcb1242555e31b2c0` 并通过逐文件校验；单卡离线加载和短文本生成已通过，真实服务基线尚未完成。
 - 工作负载类型：交互延迟、离线吞吐、长上下文、MoE 或其组合。
 - 如何验证和暴露环境内的 CUDA 编译组件，以及如何获得 Nsight 工具。
 - 第一个有证据支持的 Kernel/集成目标。
