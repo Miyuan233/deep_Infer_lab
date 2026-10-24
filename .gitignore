@@ -1,0 +1,42 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.env
+
+# 模型权重与本地缓存
+models/
+checkpoints/
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+
+# 编译与构建产物
+build/
+dist/
+*.so
+*.o
+*.a
+.ninja_*
+
+# 大型 Profiler 二进制不进入 Git；保留导出摘要和元数据
+*.nsys-rep
+*.qdrep
+*.sqlite
+*.ncu-rep
+
+# 运行日志与临时文件
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# 仅保存在服务器上的 M0 原始快照与历史环境清单
+/results/m0/
+/results/gpu-environment.txt
+/results/python-version.txt
+/configs/requirements-initial.txt
