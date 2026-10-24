@@ -28,10 +28,11 @@ M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚�
 - 生成轻量级 M0 环境快照：`results/m0/20261024T044101Z-environment/`；其中包含本机身份与进程信息，仅保存在服务器，不提交到公开仓库。
 - 编写显式指定 GPU 编号的 PyTorch/Triton Smoke Test、CPU 侧安全检查测试及中文执行说明；5 项 CPU 侧单元测试通过。
 - 用户明确授权本次 Smoke Test 使用 GPU 3。执行前复查为 0 MiB 已用、无计算进程；1024 个 FP32 元素的 PyTorch/Triton 加法结果完全一致，状态 `passed`，耗时 3.944 秒。结束后复查 GPU 3 为 0 MiB、无计算进程。原始 JSON 保存在服务器本地 `results/m0/20261024T075614Z-gpu-smoke-gpu3/result.json`，对应代码提交 `5458798`。
-- 只读检查发现用户目录暂无 Hugging Face/ModelScope 模型缓存，也未发现 Environment Module；形成 `docs/m1-baseline-plan.md`，暂推荐先用 Qwen3-8B 验证测量链，再评估更大 dense 或 MoE 模型。
+- 只读检查发现用户目录暂无 Hugging Face/ModelScope 模型缓存，也未发现 Environment Module；形成 `docs/m1-baseline-plan.md`。最初考虑 Qwen3-8B 做测量链联调，后因项目目标进一步比较了 DeepSeek 系模型。
 - 已核对 DeepInfer 官方 README 与部署问答：当前公开版列出 NVIDIA SM100 与 DeepSeek-V4.1-Flash，不能视作 H200（SM90）/Qwen3-8B 可直接运行；制定 `docs/deepinfer-reading-plan.md`，从 M1 并行研读，待 M2 证据决定是否迁移组件。
 - 确认 Qwen3-8B 官方文件页当前修订为 `b968826d9c46dd6066d109eabc6255188de91218`、仓库约 16.4 GB；`/home` 约 3.0 TiB 可用，但服务器对 Hugging Face 的 IPv4 HTTPS 连接超时，尚未下载权重。
 - 新增纯 CPU 的 TTFT/TPOT/ITL 指标公式与 7 项单元测试，以及仅供审阅的 M1 工作负载目标配置；尚未连接推理服务或产出基准数据。
+- 用户询问是否存在更适合 DeepInfer 目标的模型，因此暂停 Qwen3-8B 下载决策。只读比较 DeepSeek-V2-Lite-Chat、Qwen3-8B 与 Qwen3-30B-A3B-Instruct-2507；暂推荐 DeepSeek-V2-Lite-Chat，详见 `docs/m1-model-comparison.md`。未下载任何权重。
 
 ## 当前重要观察
 
@@ -52,7 +53,7 @@ M1 基线方案设计——GPU 3 的一次性前置 Smoke Test 已完成；尚�
 ## 下一步
 
 1. 只读检查 Environment Module 和用户态 CUDA/Nsight 方案。
-2. 用户确认基线模型及下载预算；下载前核对精确权重版本、文件字节数与磁盘余量。
+2. 用户从模型候选中确认首个基线模型及下载预算；下载前核对精确权重版本、文件字节数与磁盘余量。
 3. 按 `docs/deepinfer-reading-plan.md` 研读官方架构，并记录与单卡 H200 基线的可迁移点和不可迁移点。
 4. 获批后固定依赖与模型版本，开始实现 M1 Benchmark Harness；先规定正确性、TTFT、TPOT、吞吐量和显存的测量口径。
 5. 模型下载、加载和任何 Benchmark 运行前，重新确认 GPU 编号、资源预算和时间窗口。

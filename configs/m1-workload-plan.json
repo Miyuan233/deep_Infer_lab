@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "status": "proposal_not_executed",
-  "model": "Qwen/Qwen3-8B",
-  "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+  "model": null,
+  "model_revision": null,
   "dtype": "bfloat16",
   "tensor_parallel_size": 1,
   "max_model_len_proposal": 4096,
