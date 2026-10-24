@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "status": "proposal_not_executed",
-  "model": null,
-  "model_revision": null,
+  "model": "deepseek-ai/DeepSeek-V2-Lite-Chat",
+  "model_revision": "d174ca84ff4d8cd51f8e927bcb1242555e31b2c0",
   "dtype": "bfloat16",
   "tensor_parallel_size": 1,
   "max_model_len_proposal": 4096,
