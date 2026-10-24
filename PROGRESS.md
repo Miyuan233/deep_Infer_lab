@@ -35,6 +35,7 @@ M1 单卡基线准备——模型权重已固定并校验；尚未加载模型�
 - 用户询问是否存在更适合 DeepInfer 目标的模型，因此暂停 Qwen3-8B 下载决策。只读比较 DeepSeek-V2-Lite-Chat、Qwen3-8B 与 Qwen3-30B-A3B-Instruct-2507；用户最终选择 DeepSeek-V2-Lite-Chat，详见 `docs/m1-model-comparison.md`。
 - 用户单独批准约 31.4 GB 模型下载。使用项目独立 `.venv/` 内的 `modelscope-hub==0.4.6` 从 ModelScope 固定提交 `d174ca84ff4d8cd51f8e927bcb1242555e31b2c0` 下载；16 个文件共 31,418,838,137 字节。2026-10-24 16:44（Asia/Shanghai）独立校验全部文件大小与 SHA-256，通过 16/16；原始校验 JSON 保留在服务器本地 `models/DeepSeek-V2-Lite-Chat/verification.json`。下载和校验未使用 GPU。
 - 新增模型清单、独立校验器与 6 项相关 CPU 单元测试；服务器 `infer-h200` 全套 18 项 CPU 单元测试通过。模型、下载器和原始校验文件均被 Git 忽略；`infer-h200` 的 `pip check` 仍显示无依赖破损。
+- 在禁用可见 GPU 的 CPU 进程中解析已校验的 Tokenizer、模型配置和权重索引：Tokenizer 词表 100002，BF16，`DeepseekV2ForCausalLM`，索引指向全部 4 个预期权重分片；制定 `docs/m1-first-load-plan.md`，等待下一次 GPU 授权。
 
 ## 当前重要观察
 
@@ -43,6 +44,7 @@ M1 单卡基线准备——模型权重已固定并校验；尚未加载模型�
 - Triton 已在获授权的 GPU 3 上完成 H200 JIT Launch 与最小正确性验证；这不代表任何 Kernel 加速或模型推理性能结论。
 - M0 检查未在 `infer-h200` 中发现 `pytest`、`flash-attn` 或 Nsight 命令行工具；模型下载器只安装在项目独立 `.venv/`，未更改 `infer-h200` 依赖。
 - GPU 3 的授权仅针对已完成的本次 Smoke Test；后续模型加载、服务和 Benchmark 仍需单独确认资源预算与授权。
+- vLLM `0.32.0` 的 CPU-only 帮助命令列出首次加载计划所需参数，但提示 FlashInfer 预编译内核与 PATH 中的 `nvcc`/`ninja` 不可用；真实模型加载是否受影响尚待验证。
 - 目录在初始化前不是 Git 仓库。
 
 ## 阻塞项与待决策

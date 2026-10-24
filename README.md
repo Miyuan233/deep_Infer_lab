@@ -12,6 +12,7 @@
 - `docs/m1-preflight.md`：单卡 Smoke Test 的目的、资源预算和执行门槛。
 - `docs/m1-model-comparison.md`：单卡基线模型的对比与选型依据。
 - `docs/model-acquisition.md`：固定模型修订、下载隔离和 SHA-256 校验方法。
+- `docs/m1-first-load-plan.md`：首次短时离线加载的资源预算与 GPU 授权门槛。
 
 指定 Conda 环境为 `infer-h200`。自动化命令优先采用：
 

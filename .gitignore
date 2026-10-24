@@ -37,6 +37,7 @@ dist/
 
 # 仅保存在服务器上的 M0 原始快照与历史环境清单
 /results/m0/
+/results/m1/
 /results/gpu-environment.txt
 /results/python-version.txt
 /configs/requirements-initial.txt
