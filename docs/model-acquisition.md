@@ -6,6 +6,8 @@
 
 H200 服务器无法直连 Hugging Face，ModelScope 的该官方模型仓库可访问。为避免浮动的 `master`，先用 `git ls-remote` 取得 ModelScope 提交 `d174ca84ff4d8cd51f8e927bcb1242555e31b2c0`，再以该提交号查询 ModelScope 文件 API。16 个文件共 31,418,838,137 字节，清单及各文件 SHA-256 保存在 `configs/deepseek-v2-lite-chat-modelscope-manifest.json`。
 
+四个权重分片的 SHA-256 又分别与 DeepSeek 官方 Hugging Face 文件页核对一致：[分片 1](https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite-Chat/blob/main/model-00001-of-000004.safetensors)、[分片 2](https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite-Chat/blob/main/model-00002-of-000004.safetensors)、[分片 3](https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite-Chat/blob/main/model-00003-of-000004.safetensors)、[分片 4](https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite-Chat/blob/main/model-00004-of-000004.safetensors)。这只是远端清单的交叉核对，不能代替本地文件哈希验证。
+
 ## 隔离方式
 
 - 模型保存在服务器项目目录 `models/DeepSeek-V2-Lite-Chat/`，`models/` 被 Git 忽略；绝不提交权重。
