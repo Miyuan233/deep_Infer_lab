@@ -38,6 +38,7 @@ M1 单卡基线准备——模型权重已固定并校验，首次离线生成�
 - 在禁用可见 GPU 的 CPU 进程中解析已校验的 Tokenizer、模型配置和权重索引：Tokenizer 词表 100002，BF16，`DeepseekV2ForCausalLM`，索引指向全部 4 个预期权重分片；制定 `docs/m1-first-load-plan.md`，等待下一次 GPU 授权。
 - 用户单独授权 GPU 3 进行最多 15 分钟、预计 60–75 GiB 的离线模型功能验证。2026-10-24 17:03（Asia/Shanghai）运行前 GPU 3 为 0 MiB、无计算进程；以 UUID 限定可见设备，vLLM `0.32.0` 在 BF16、TP=1、`gpu_memory_utilization=0.45`、`max_model_len=4096`、`max_num_seqs=4`、`enforce_eager=True` 下成功加载模型并生成 32 个 Token。脚本状态 `passed`，总耗时 48.407 秒；`finish_reason=length`，回答在 32 Token 上限处被截断。退出后 GPU 3 回到 0 MiB、无计算进程。原始结果和日志保存在服务器本地 `results/m1/20261024T090313Z-first-load/`，运行代码提交 `e273ffb`；详见 `docs/m1-first-load-result.md`。
 - 新增 `scripts/prepare_m1_workload.py`，在强制离线、禁用可见 GPU 的进程中，用固定修订的本地 Tokenizer 生成三组各 8 条、共 24 条聊天请求。实际输入 Token 数为 131、2063、132（每组内一致），目标分别为 128、2048、128；输出 128/512 Token 只是未来的请求上限。独立重读 JSONL 后核实 24 个唯一 ID，24 条实际 Token 数均与重算一致；原始请求与清单保存在服务器本地 `results/m1/20261025T114455Z-workload-prep/`，详见 `docs/m1-workload-preparation.md`。本轮不使用 GPU，不构成 Benchmark。
+- 应用户要求，在 `AGENTS.md` 中加入阶段性自动同步规则：完成可验证的实质改动后提交、推送 GitHub，并让服务器安全快进；较小改动在任务结束前合并同步，未提交的外部改动不得被覆盖。
 
 ## 当前重要观察
 
