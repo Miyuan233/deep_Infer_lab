@@ -1,10 +1,10 @@
 # 项目进度
 
-最后更新：2026-10-24（Asia/Shanghai）
+最后更新：2026-10-25（Asia/Shanghai）
 
 ## 当前阶段
 
-M1 单卡基线准备——模型权重已固定并校验，首次离线加载及短文本生成功能验证通过；尚未启动服务或进行性能基准。
+M1 单卡基线准备——模型权重已固定并校验，首次离线生成通过，三组请求已用真实 Tokenizer 离线准备；尚未启动服务或进行性能基准。
 
 ## 已完成
 
@@ -37,6 +37,7 @@ M1 单卡基线准备——模型权重已固定并校验，首次离线加载�
 - 新增模型清单、独立校验器与 6 项相关 CPU 单元测试；服务器 `infer-h200` 全套 18 项 CPU 单元测试通过。模型、下载器和原始校验文件均被 Git 忽略；`infer-h200` 的 `pip check` 仍显示无依赖破损。
 - 在禁用可见 GPU 的 CPU 进程中解析已校验的 Tokenizer、模型配置和权重索引：Tokenizer 词表 100002，BF16，`DeepseekV2ForCausalLM`，索引指向全部 4 个预期权重分片；制定 `docs/m1-first-load-plan.md`，等待下一次 GPU 授权。
 - 用户单独授权 GPU 3 进行最多 15 分钟、预计 60–75 GiB 的离线模型功能验证。2026-10-24 17:03（Asia/Shanghai）运行前 GPU 3 为 0 MiB、无计算进程；以 UUID 限定可见设备，vLLM `0.32.0` 在 BF16、TP=1、`gpu_memory_utilization=0.45`、`max_model_len=4096`、`max_num_seqs=4`、`enforce_eager=True` 下成功加载模型并生成 32 个 Token。脚本状态 `passed`，总耗时 48.407 秒；`finish_reason=length`，回答在 32 Token 上限处被截断。退出后 GPU 3 回到 0 MiB、无计算进程。原始结果和日志保存在服务器本地 `results/m1/20261024T090313Z-first-load/`，运行代码提交 `e273ffb`；详见 `docs/m1-first-load-result.md`。
+- 新增 `scripts/prepare_m1_workload.py`，在强制离线、禁用可见 GPU 的进程中，用固定修订的本地 Tokenizer 生成三组各 8 条、共 24 条聊天请求。实际输入 Token 数为 131、2063、132（每组内一致），目标分别为 128、2048、128；输出 128/512 Token 只是未来的请求上限。独立重读 JSONL 后核实 24 个唯一 ID，24 条实际 Token 数均与重算一致；原始请求与清单保存在服务器本地 `results/m1/20261025T114455Z-workload-prep/`，详见 `docs/m1-workload-preparation.md`。本轮不使用 GPU，不构成 Benchmark。
 
 ## 当前重要观察
 
@@ -46,21 +47,23 @@ M1 单卡基线准备——模型权重已固定并校验，首次离线加载�
 - M0 检查未在 `infer-h200` 中发现 `pytest`、`flash-attn` 或 Nsight 命令行工具；模型下载器只安装在项目独立 `.venv/`，未更改 `infer-h200` 依赖。
 - GPU 3 的两次授权分别只覆盖已完成的 Smoke Test 和短时离线模型功能验证；后续服务、Benchmark 或 Profiler 仍需单独确认资源预算与授权。
 - 首次模型加载虽成功，vLLM 仍报告部分 FlashInfer Kernel 因预编译包或编译工具缺失而禁用，并采用 Triton MoE 后端；这可能影响后续性能基线，不能从功能验证推断最优性能。
+- 当前 Transformers 返回的 `BatchEncoding` 是映射对象而非普通 `dict`；计算聊天输入长度必须使用其中的 `input_ids`。24 条请求的 JSONL SHA-256 为 `4d54a7ac60cb38f61922b2d7325e4bf272e9e62c31ddfca74e53ec3eb2d5f0ad`。
 - 目录在初始化前不是 Git 仓库。
 
 ## 阻塞项与待决策
 
 1. 后续服务、Benchmark 或 Profiler Capture 前，用户必须明确授权 GPU 编号；本次短时功能验证授权不自动延续。
-2. 首次离线加载已通过；正式基线前仍需确定服务暴露方式、请求工作负载、显存采样方法和安全余量。
+2. 首次离线加载和请求长度准备已通过；正式基线前仍需确定服务暴露方式、到达过程、预热/冷启动边界、重复次数、显存采样方法和安全余量。
 3. 决定如何暴露并验证环境内的 Wheel 版 `nvcc`，以及如何在不修改系统的情况下获得 Nsight；同时应确认管理员是否提供 Module。
 4. 决定把 `pytest` 等开发依赖安装到 `infer-h200`，还是克隆一个更严格隔离的项目环境。
+5. 2026-10-25 检查时，服务器工作区的已跟踪文件 `tests/unit/test_metrics.py` 出现未提交删除，来源不明；本轮未恢复或覆盖。因该文件缺席，服务器最终 `unittest discover` 实际运行 16 项且全部通过，不能把它记作含指标测试的全套 23 项通过。
 
 ## 下一步
 
 1. 按 `docs/deepinfer-reading-plan.md` 研读官方架构，记录与单卡 H200 基线的可迁移点和不可迁移点。
-2. 在不使用 GPU 的前提下确定服务与负载设计：请求长度、到达过程、并发度、预热/冷启动边界、重复次数及显存采样方法。
+2. 审阅已生成请求的内容与实际 Token 数；决定合成重复背景能否代表目标场景，必要时补充更自然的真实请求，同时固定到达过程、并发度、预热/冷启动边界、重复次数和显存采样方法。
 3. 制定可复现的 TTFT、TPOT/ITL、吞吐量和显存基线方案，保存逐请求原始数据；实际服务和 GPU Benchmark 另行申请 GPU 编号与资源预算。
 
 ## 性能结论
 
-无。Smoke Test 只验证 PyTorch/Triton 小张量正确性；3.944 秒不能用作推理或 Kernel 性能指标。首次模型加载记录的 48.407 秒包含启动、加载和生成，不含记录后清理时间，仅证明功能可用，不是 TTFT、TPOT、吞吐量或峰值显存数据；日志中的估算生成速度也不能作为基线结果。Smoke Test JSON 中的 2.0 MiB 仅是 PyTorch 报告的显存保留峰值，不是 GPU 实际峰值。
+无。Smoke Test 只验证 PyTorch/Triton 小张量正确性；3.944 秒不能用作推理或 Kernel 性能指标。首次模型加载记录的 48.407 秒包含启动、加载和生成，不含记录后清理时间，仅证明功能可用，不是 TTFT、TPOT、吞吐量或峰值显存数据；日志中的估算生成速度也不能作为基线结果。新生成的请求尚未发给服务，因此没有任何推理性能数据。Smoke Test JSON 中的 2.0 MiB 仅是 PyTorch 报告的显存保留峰值，不是 GPU 实际峰值。
