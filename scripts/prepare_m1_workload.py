@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import subprocess
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -26,7 +27,7 @@ def chat_token_ids(tokenizer: Any, messages: list[dict[str, str]]) -> list[int]:
     """只统计实际聊天模板编码中的 input_ids，不把字段数当作 Token 数。"""
 
     encoded = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
-    token_ids = encoded["input_ids"] if isinstance(encoded, dict) else encoded
+    token_ids = encoded["input_ids"] if isinstance(encoded, Mapping) else encoded
     if not isinstance(token_ids, list) or not all(isinstance(token, int) for token in token_ids):
         raise TypeError("Tokenizer 未返回单请求的一维 input_ids")
     return token_ids
